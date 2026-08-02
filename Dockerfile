@@ -24,6 +24,13 @@ COPY src/ ./src/
 # Install dependencies using uv
 RUN uv pip install -e .
 
+# Verify the installed MCP SDK still provides the module this project imports.
+# mcp 2.x removed mcp.server.fastmcp, so an unpinned resolve silently produces
+# an image that crash-loops at startup. Fail the build here instead, and print
+# the resolved version so it's visible in the build logs.
+RUN python -c "import importlib.metadata as m; print('Installed mcp version:', m.version('mcp'))" && \
+    python -c "from mcp.server.fastmcp import FastMCP; print('mcp.server.fastmcp import OK')"
+
 # Copy test files (optional, for testing in container)
 COPY tests/ ./tests/
 COPY pytest.ini ./
